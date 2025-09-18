@@ -124,12 +124,14 @@ function createOrUpdateShowcase() {
 
 function setupShowcaseAnimation() {
     if (!showcaseBear) return;
+    if (!TWEEN || !TWEEN.Tween) { console.warn("[SHOWCASE] TWEEN not ready; skipping animation"); return; }
+    const easingInOut = (TWEEN.Easing && TWEEN.Easing.Sine && TWEEN.Easing.Sine.InOut) || (TWEEN.Easing?.Linear?.None) || ((k)=>k);
     TWEEN.removeAll();
     const arm = showcaseBear.getObjectByName('rightArm');
-    if (arm) new TWEEN.Tween(arm.rotation).to({ x: 0.35 }, 900).easing(TWEEN.Easing.Sine.InOut).yoyo(true).repeat(Infinity).start();
+    if (arm?.rotation) new TWEEN.Tween(arm.rotation).to({ x: 0.35 }, 900).easing(easingInOut).yoyo(true).repeat(Infinity).start();
     if (showcaseFish) {
-        new TWEEN.Tween(showcaseFish.position).to({ y: 0.15, z: 0.5 }, 800).easing(TWEEN.Easing.Sine.InOut).yoyo(true).repeat(Infinity).start();
-        new TWEEN.Tween(showcaseFish.rotation).to({ x: -Math.PI/8, z: Math.PI/16 }, 800).easing(TWEEN.Easing.Sine.InOut).yoyo(true).repeat(Infinity).start();
+        new TWEEN.Tween(showcaseFish.position).to({ y: 0.15, z: 0.5 }, 800).easing(easingInOut).yoyo(true).repeat(Infinity).start();
+        new TWEEN.Tween(showcaseFish.rotation).to({ x: -Math.PI/8, z: Math.PI/16 }, 800).easing(easingInOut).yoyo(true).repeat(Infinity).start();
     }
 }
 
