@@ -57,46 +57,75 @@ function disposeObject(obj) {
 }
 
 function createOrUpdateShowcase() {
-    // [FIX] Perform a full, robust disposal of the old showcase objects.
-    if (showcaseBear) {
-        disposeObject(showcaseBear); // This handles children like the fish too.
-        scene.remove(showcaseBear);
-        showcaseBear = null;
-        showcaseFish = null;
+    // Only recreate if bear type changed or doesn't exist
+    const needsNewBear = !showcaseBear || 
+        showcaseBear.userData.bearType !== playerProgress.selectedBear;
+    
+    if (needsNewBear) {
+        // [FIX] Perform a full, robust disposal of the old showcase objects.
+        if (showcaseBear) {
+            disposeObject(showcaseBear);
+            scene.remove(showcaseBear);
+            showcaseBear = null;
+            showcaseFish = null;
+        }
+
+        // Create the bear and fish from a clean slate.
+        showcaseBear = createBear(playerProgress.selectedBear);
+        showcaseBear.name = 'showcase-bear';
+        showcaseBear.userData.isShowcase = true;
+        showcaseBear.userData.bearType = playerProgress.selectedBear; // Track bear type
+        showcaseBear.position.set(0, 4.65, 0.8);
+        showcaseBear.rotation.set(0, 0, 0);
+        scene.add(showcaseBear);
     }
 
-    // Create the bear and fish from a clean slate.
-    showcaseBear = createBear(playerProgress.selectedBear);
-    showcaseBear.name = 'showcase-bear';
-    showcaseBear.userData.isShowcase = true;
-    showcaseBear.position.set(0, 4.65, 0.8);
-    showcaseBear.rotation.set(0, 0, 0); // Face camera
-    scene.add(showcaseBear);
-
-    // [FIX] Create the fish but don't add it to the main scene.
-    // It will be added directly as a child of the bear's arm.
-    showcaseFish = createFish(scene, 0, playerProgress.selectedFish, {}, false);
-    showcaseFish.name = 'showcase-fish';
-    if (showcaseFish.userData?.velocity) showcaseFish.userData.velocity.set(0, 0, 0);
-    if (showcaseFish.userData) showcaseFish.userData.swimAmplitude = 0;
+    // Always recreate fish if needed (it's lightweight)
+    const needsNewFish = !showcaseFish || 
+        showcaseFish.userData.fishType !== playerProgress.selectedFish;
     
-    // Attach fish to bear's hand
-    const rightArm = showcaseBear.getObjectByName('rightArm');
-    if (rightArm) {
-        rightArm.add(showcaseFish); // Add fish directly to the arm
-        showcaseFish.position.set(0.1, -0.7, 0.4);
-        showcaseFish.rotation.set(-Math.PI / 4, Math.PI / 2, Math.PI);
-        showcaseFish.scale.set(0.5, 0.5, 0.5);
-    } else {
-         console.error("Showcase bear's right arm not found for fish attachment!");
+    if (needsNewFish) {
+        // Remove old fish if it exists
+        if (showcaseFish) {
+            const rightArm = showcaseBear.getObjectByName('rightArm');
+            if (rightArm && showcaseFish.parent === rightArm) {
+                rightArm.remove(showcaseFish);
+            }
+            disposeObject(showcaseFish);
+            showcaseFish = null;
+        }
+
+        // Create new fish
+        showcaseFish = createFish(scene, 0, playerProgress.selectedFish, {}, false);
+        showcaseFish.name = 'showcase-fish';
+        showcaseFish.userData.fishType = playerProgress.selectedFish; // Track fish type
+        if (showcaseFish.userData?.velocity) showcaseFish.userData.velocity.set(0, 0, 0);
+        if (showcaseFish.userData) showcaseFish.userData.swimAmplitude = 0;
+        
+        // Attach fish to bear's hand
+        const rightArm = showcaseBear.getObjectByName('rightArm');
+        if (rightArm) {
+            rightArm.add(showcaseFish);
+            showcaseFish.position.set(0.1, -0.7, 0.4);
+            showcaseFish.rotation.set(-Math.PI / 4, Math.PI / 2, Math.PI);
+            showcaseFish.scale.set(0.5, 0.5, 0.5);
+        } else {
+             console.error("Showcase bear's right arm not found for fish attachment!");
+        }
+    }
+
+    // Ensure showcase bear is visible
+    if (showcaseBear) {
+        showcaseBear.visible = true;
     }
 }
 
 function setupStartScreen() {
     gameState.current = 'IDLE';
-    // Hide any active game objects
+    
+    // Hide any active game objects (but not showcase objects)
     scene.children.forEach(child => {
-        if (child.name === 'bear' || child.name === 'fish') {
+        if ((child.name === 'bear' || child.name === 'fish') && !child.userData?.isShowcase) {
              child.visible = false;
         }
     });
@@ -130,10 +159,10 @@ function setupStartScreen() {
         if(quickFishName) quickFishName.textContent = selectedFishInfo.name;
         if(quickFishImg) quickFishImg.src = selectedFishInfo.asset;
         
-        // The showcase will now be correctly rebuilt with the new selection
         createOrUpdateShowcase();
     });
-    createOrUpdateShowcase();
+    
+    createOrUpdateShowcase(); // Ensure showcase is visible and up to date
     showStart(isFirstLoad);
     isFirstLoad = false;
     startButton.innerText = 'START';
