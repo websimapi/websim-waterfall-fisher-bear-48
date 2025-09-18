@@ -83,6 +83,14 @@ function createOrUpdateShowcase() {
     showcaseBear.rotation.z = 0;
     scene.add(showcaseBear);
 
+    // Rebuild both arms fresh and then attach fish to the right arm
+    const sampleMesh = showcaseBear.children.find(c => c.isMesh);
+    const bodyMat = sampleMesh ? sampleMesh.material : new THREE.MeshLambertMaterial({ color: 0x8d5524 });
+    ['leftArm','rightArm'].forEach(n => { const old = showcaseBear.getObjectByName(n); if (old) showcaseBear.remove(old); });
+    const armY=0.1, armZ=-0.3, aw=0.4, ah=1.0, ad=0.4;
+    const mkArm = (x, rz, name) => { const m=new THREE.Mesh(new THREE.BoxGeometry(aw,ah,ad), bodyMat); m.position.set(x,armY,armZ); m.rotation.z=rz; m.name=name; showcaseBear.add(m); return m; };
+    const rebuiltRightArm = mkArm(0.95, Math.PI/16, 'rightArm'); mkArm(-0.95, -Math.PI/16, 'leftArm');
+
     // Verify bear structure
     const rightArm = showcaseBear.getObjectByName('rightArm');
     const leftArm = showcaseBear.getObjectByName('leftArm');
@@ -113,9 +121,11 @@ function createOrUpdateShowcase() {
     showcaseFish.userData.fishType = playerProgress.selectedFish;
     if (showcaseFish.userData?.velocity) showcaseFish.userData.velocity.set(0, 0, 0);
     if (showcaseFish.userData) showcaseFish.userData.swimAmplitude = 0;
+    // ensure any previous showcaseFish is detached from old parents
+    if (showcaseFish.parent) showcaseFish.parent.remove(showcaseFish);
     
     // Attach fish to bear's hand with error checking
-    const finalRightArm = showcaseBear.getObjectByName('rightArm');
+    const finalRightArm = rebuiltRightArm || showcaseBear.getObjectByName('rightArm');
     if (finalRightArm) {
         console.log("[SHOWCASE] Attaching fish to right arm");
         finalRightArm.add(showcaseFish);
