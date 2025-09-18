@@ -1,20 +1,24 @@
-
-```
 let audioCtx;
 export const sounds = {};
 
 export async function initAudio() {
     if (audioCtx) return;
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    sounds.catch = await loadSound('catch.mp3');
-    sounds.splash = await loadSound('splash.mp3');
-    sounds.whoosh = await loadSound('whoosh.mp3');
+    sounds.catch = await loadSound('/catch.mp3');
+    sounds.splash = await loadSound('/splash.mp3');
+    sounds.whoosh = await loadSound('/whoosh.mp3');
 }
 
 export function wireAudioUnlock(initFn) {
-    window.addEventListener('click', initFn, { once: true });
-    window.addEventListener('touchstart', initFn, { once: true });
-    window.addEventListener('pointerdown', initFn, { once: true });
+    const unlock = () => {
+        initFn();
+        window.removeEventListener('click', unlock);
+        window.removeEventListener('touchstart', unlock);
+        window.removeEventListener('pointerdown', unlock);
+    };
+    window.addEventListener('click', unlock);
+    window.addEventListener('touchstart', unlock);
+    window.addEventListener('pointerdown', unlock);
 }
 
 async function loadSound(url) {
@@ -30,3 +34,4 @@ export function playSFX(buffer) {
     source.connect(audioCtx.destination);
     source.start(0);
 }
+

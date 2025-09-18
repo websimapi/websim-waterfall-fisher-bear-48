@@ -1,5 +1,3 @@
-
-```javascript
 import { BEARS, FISH } from '../unlocks.js';
 
 let fadeTimeout;
@@ -13,9 +11,7 @@ export function bindUI() {
     const streakEl = document.getElementById('streak');
     const finalScoreEl = document.getElementById('final-score');
     const startButton = document.getElementById('start-button');
-    // const restartButton = document.getElementById('restart-button'); // This was not in the HTML
 
-    // new elements
     const quickChoices = document.getElementById('quick-choices');
     const chooseBear = document.getElementById('choose-bear');
     const chooseFish = document.getElementById('choose-fish');
@@ -52,10 +48,7 @@ export function bindUI() {
         streakContainer.classList.remove('hidden');
     }
 
-    startButton.addEventListener('click', handleStart);
-    // if (restartButton) restartButton.addEventListener('click', handleStart);
-
-    return { startScreen, gameOverScreen, scoreContainer, streakContainer, scoreEl, streakEl, finalScoreEl, startButton };
+    return { startButton };
 }
 
 export function updateUIValues({ score, streak }) {
@@ -82,17 +75,18 @@ export function showStart(isFirstLoad = false) {
     document.getElementById('game-over-screen').classList.add('hidden');
     document.getElementById('score-container').classList.add('hidden');
     document.getElementById('streak-container').classList.add('hidden');
-    // ensure correct panels visible
+    
     const quick = document.getElementById('quick-choices');
     const unlocks = document.getElementById('unlocks-container');
     if (quick) quick.classList.remove('hidden');
     if (unlocks) unlocks.classList.add('hidden');
+    
     const logo = document.getElementById('game-logo');
     if (logo) {
         if (isFirstLoad) {
             logo.classList.remove('fade-out', 'hidden');
             logo.style.animation = 'none';
-            void logo.offsetHeight; // Trigger reflow to restart animation
+            void logo.offsetHeight; 
             logo.style.animation = '';
             logo.style.opacity = '1';
 
@@ -125,7 +119,15 @@ function createUnlockBox(item, type, isUnlocked, isSelected, clickHandler) {
     box.appendChild(span);
 
     if (isUnlocked) {
-        box.addEventListener('click', () => clickHandler(type, item.id));
+        box.addEventListener('click', () => {
+            clickHandler(type, item.id);
+            // Visually update selection
+            const parent = box.parentElement;
+            if (parent) {
+                Array.from(parent.children).forEach(child => child.classList.remove('selected'));
+            }
+            box.classList.add('selected');
+        });
     } else {
         const unlockText = document.createElement('span');
         unlockText.textContent = `Score ${item.unlockCondition.value}`;

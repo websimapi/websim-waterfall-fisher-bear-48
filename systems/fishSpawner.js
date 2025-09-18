@@ -1,5 +1,3 @@
-
-```
 import { createFish } from '../entities/fish.js';
 import { FISH } from '../unlocks.js';
 

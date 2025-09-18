@@ -1,5 +1,3 @@
-
-```
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
@@ -47,3 +45,4 @@ export function mountRenderer(container) {
     container.appendChild(renderer.domElement);
     resizeRenderer();
 }
+

@@ -1,5 +1,3 @@
-
-```
 import * as THREE from 'three';
 import { scene, camera, renderer, resizeRenderer, createLights, initOrbitControls, getOrbitControls } from './scene.js';
 import { createScenery } from './entities/scenery.js';
@@ -17,7 +15,7 @@ createLights(scene);
 
 // --- INITIALIZE SYSTEMS ---
 initDevTools(scene);
-initGame(scene);
+initGame();
 initControls(scene, camera);
 
 // --- RENDERER & RESIZE ---
@@ -35,7 +33,7 @@ function animate() {
     }
 
     updateWaterfall(waterfall);
-    updateGame(scene);
+    updateGame();
 
     renderer.render(scene, camera);
 }
