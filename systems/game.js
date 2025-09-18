@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { scene } from '../scene.js';
-import { createBear, updateBear } from '../entities/bear.js';
+import { createBear, updateBear, getHandAnchor } from '../entities/bear.js';
 import { createFish, updateFish } from '../entities/fish.js';
 import { initAudio, playSFX, sounds, wireAudioUnlock } from './audio.js';
 import { bindUI, updateUIValues, showGameOver, showHUD, showStart, populateUnlocks } from './ui.js';
@@ -83,36 +83,9 @@ function createOrUpdateShowcase() {
     showcaseBear.rotation.z = 0;
     scene.add(showcaseBear);
 
-    // Rebuild both arms fresh and then attach fish to the right arm
-    const sampleMesh = showcaseBear.children.find(c => c.isMesh);
-    const bodyMat = sampleMesh ? sampleMesh.material : new THREE.MeshLambertMaterial({ color: 0x8d5524 });
-    ['leftArm','rightArm'].forEach(n => { const old = showcaseBear.getObjectByName(n); if (old) showcaseBear.remove(old); });
-    const armY=0.1, armZ=-0.3, aw=0.4, ah=1.0, ad=0.4;
-    const mkArm = (x, rz, name) => { const m=new THREE.Mesh(new THREE.BoxGeometry(aw,ah,ad), bodyMat); m.position.set(x,armY,armZ); m.rotation.z=rz; m.name=name; showcaseBear.add(m); return m; };
-    const rebuiltRightArm = mkArm(0.95, Math.PI/16, 'rightArm'); mkArm(-0.95, -Math.PI/16, 'leftArm');
-
-    // Verify bear structure
-    const rightArm = showcaseBear.getObjectByName('rightArm');
-    const leftArm = showcaseBear.getObjectByName('leftArm');
-    console.log("[SHOWCASE] Bear arms check - Right arm exists:", !!rightArm);
-    console.log("[SHOWCASE] Bear arms check - Left arm exists:", !!leftArm);
-    console.log("[SHOWCASE] Bear children count:", showcaseBear.children.length);
-    
-    if (!rightArm) {
-        console.error("[SHOWCASE] CRITICAL: Right arm missing from showcase bear!");
-        console.log("[SHOWCASE] Bear children names:", showcaseBear.children.map(c => c.name || 'unnamed'));
-        // Force recreation of bear if arm is missing
-        scene.remove(showcaseBear);
-        showcaseBear = createBear(playerProgress.selectedBear);
-        showcaseBear.name = 'showcase-bear';
-        showcaseBear.userData.isShowcase = true;
-        showcaseBear.userData.bearType = playerProgress.selectedBear;
-        showcaseBear.position.set(0, 4.65, 0.8);
-        showcaseBear.rotation.x = 0; // keep facing direction from createBear()
-        showcaseBear.rotation.z = 0;
-        scene.add(showcaseBear);
-        console.log("[SHOWCASE] Recreated bear due to missing arm");
-    }
+    // Rig now has stable hand anchors; attach fish to right-hand anchor
+    const rightAnchor = getHandAnchor(showcaseBear, 'right');
+    console.log("[SHOWCASE] Right hand anchor present:", !!rightAnchor);
 
     // Create fresh fish
     console.log("[SHOWCASE] Creating new showcase fish of type:", playerProgress.selectedFish);
@@ -125,20 +98,12 @@ function createOrUpdateShowcase() {
     if (showcaseFish.parent) showcaseFish.parent.remove(showcaseFish);
     
     // Attach fish to bear's hand with error checking
-    const finalRightArm = rebuiltRightArm || showcaseBear.getObjectByName('rightArm');
-    if (finalRightArm) {
-        console.log("[SHOWCASE] Attaching fish to right arm");
-        finalRightArm.add(showcaseFish);
-        showcaseFish.position.set(0.1, -0.7, 0.4);
-        showcaseFish.rotation.set(-Math.PI / 4, Math.PI / 2, Math.PI);
+    if (rightAnchor) {
+        rightAnchor.add(showcaseFish);
+        showcaseFish.position.set(0, -0.35, 0.35);
+        showcaseFish.rotation.set(-Math.PI/6, Math.PI/2, Math.PI);
         showcaseFish.scale.set(0.5, 0.5, 0.5);
-        console.log("[SHOWCASE] Fish successfully attached");
-    } else {
-        console.error("[SHOWCASE] CRITICAL: Cannot attach fish - right arm still missing!");
-        console.log("[SHOWCASE] Final bear structure:", {
-            childrenCount: showcaseBear.children.length,
-            childrenNames: showcaseBear.children.map(c => c.name || 'unnamed')
-        });
+        console.log("[SHOWCASE] Fish attached to hand anchor");
     }
 
     // Ensure showcase bear is visible
@@ -309,10 +274,7 @@ export function updateGame() {
         gameState.idleAnimTimer += 0.05;
         if (showcaseBear) {
             const rightArm = showcaseBear.getObjectByName('rightArm');
-            if (rightArm) {
-                const armBob = Math.sin(gameState.idleAnimTimer) * 0.1;
-                rightArm.rotation.x = armBob;
-            }
+            if (rightArm) rightArm.rotation.x = Math.sin(gameState.idleAnimTimer) * 0.1;
         }
     }
 }
