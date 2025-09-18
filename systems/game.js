@@ -128,7 +128,10 @@ function setupShowcaseAnimation() {
     const easingInOut = (TWEEN.Easing && TWEEN.Easing.Sine && TWEEN.Easing.Sine.InOut) || (TWEEN.Easing?.Linear?.None) || ((k)=>k);
     TWEEN.removeAll();
     const arm = showcaseBear.getObjectByName('rightArm');
-    if (arm?.rotation) new TWEEN.Tween(arm.rotation).to({ x: 0.35 }, 900).easing(easingInOut).yoyo(true).repeat(Infinity).start();
+    if (arm?.rotation) {
+        arm.rotation.y = 0.2; // bias arm toward +Z
+        new TWEEN.Tween(arm.rotation).to({ x: 0.25 }, 900).easing(easingInOut).yoyo(true).repeat(Infinity).start();
+    }
     if (showcaseFish) {
         new TWEEN.Tween(showcaseFish.position).to({ y: 0.15, z: 0.5 }, 800).easing(easingInOut).yoyo(true).repeat(Infinity).start();
         new TWEEN.Tween(showcaseFish.rotation).to({ x: -Math.PI/8, z: Math.PI/16 }, 800).easing(easingInOut).yoyo(true).repeat(Infinity).start();
@@ -297,7 +300,10 @@ export function updateGame() {
         gameState.idleAnimTimer += 0.05;
         if (showcaseBear) {
             const rightArm = showcaseBear.getObjectByName('rightArm');
-            if (rightArm) rightArm.rotation.x = Math.sin(gameState.idleAnimTimer) * 0.1;
+            if (rightArm) {
+                rightArm.rotation.x = Math.sin(gameState.idleAnimTimer) * 0.08 + 0.12; // less backward bend
+                rightArm.rotation.y = 0.2; // bias toward +Z
+            }
         }
     }
 }
