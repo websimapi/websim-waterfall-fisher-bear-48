@@ -79,7 +79,8 @@ function createOrUpdateShowcase() {
     showcaseBear.userData.isShowcase = true;
     showcaseBear.userData.bearType = playerProgress.selectedBear;
     showcaseBear.position.set(0, 4.65, 0.8);
-    showcaseBear.rotation.set(0, 0, 0);
+    showcaseBear.rotation.x = 0; // keep facing direction from createBear()
+    showcaseBear.rotation.z = 0;
     scene.add(showcaseBear);
 
     // Verify bear structure
@@ -99,7 +100,8 @@ function createOrUpdateShowcase() {
         showcaseBear.userData.isShowcase = true;
         showcaseBear.userData.bearType = playerProgress.selectedBear;
         showcaseBear.position.set(0, 4.65, 0.8);
-        showcaseBear.rotation.set(0, 0, 0);
+        showcaseBear.rotation.x = 0; // keep facing direction from createBear()
+        showcaseBear.rotation.z = 0;
         scene.add(showcaseBear);
         console.log("[SHOWCASE] Recreated bear due to missing arm");
     }
