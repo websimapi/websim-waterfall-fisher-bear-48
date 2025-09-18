@@ -57,70 +57,89 @@ function disposeObject(obj) {
 }
 
 function createOrUpdateShowcase() {
-    // Only recreate if bear type changed or doesn't exist
-    const needsNewBear = !showcaseBear || 
-        showcaseBear.userData.bearType !== playerProgress.selectedBear;
-    
-    if (needsNewBear) {
-        // [FIX] Perform a full, robust disposal of the old showcase objects.
-        if (showcaseBear) {
-            disposeObject(showcaseBear);
-            scene.remove(showcaseBear);
-            showcaseBear = null;
-            showcaseFish = null;
-        }
+    console.log("[SHOWCASE] Starting showcase creation/update");
+    console.log("[SHOWCASE] Current showcase bear exists:", !!showcaseBear);
+    console.log("[SHOWCASE] Selected bear type:", playerProgress.selectedBear);
+    console.log("[SHOWCASE] Selected fish type:", playerProgress.selectedFish);
 
-        // Create the bear and fish from a clean slate.
+    // [FIX] ALWAYS recreate showcase objects on retry to prevent corruption
+    // Instead of trying to reuse potentially corrupted objects, start fresh
+    if (showcaseBear) {
+        console.log("[SHOWCASE] Removing existing showcase bear");
+        // Simple removal without complex disposal that can break hierarchy
+        scene.remove(showcaseBear);
+        showcaseBear = null;
+        showcaseFish = null;
+    }
+
+    // Create fresh bear
+    console.log("[SHOWCASE] Creating new showcase bear of type:", playerProgress.selectedBear);
+    showcaseBear = createBear(playerProgress.selectedBear);
+    showcaseBear.name = 'showcase-bear';
+    showcaseBear.userData.isShowcase = true;
+    showcaseBear.userData.bearType = playerProgress.selectedBear;
+    showcaseBear.position.set(0, 4.65, 0.8);
+    showcaseBear.rotation.set(0, 0, 0);
+    scene.add(showcaseBear);
+
+    // Verify bear structure
+    const rightArm = showcaseBear.getObjectByName('rightArm');
+    const leftArm = showcaseBear.getObjectByName('leftArm');
+    console.log("[SHOWCASE] Bear arms check - Right arm exists:", !!rightArm);
+    console.log("[SHOWCASE] Bear arms check - Left arm exists:", !!leftArm);
+    console.log("[SHOWCASE] Bear children count:", showcaseBear.children.length);
+    
+    if (!rightArm) {
+        console.error("[SHOWCASE] CRITICAL: Right arm missing from showcase bear!");
+        console.log("[SHOWCASE] Bear children names:", showcaseBear.children.map(c => c.name || 'unnamed'));
+        // Force recreation of bear if arm is missing
+        scene.remove(showcaseBear);
         showcaseBear = createBear(playerProgress.selectedBear);
         showcaseBear.name = 'showcase-bear';
         showcaseBear.userData.isShowcase = true;
-        showcaseBear.userData.bearType = playerProgress.selectedBear; // Track bear type
+        showcaseBear.userData.bearType = playerProgress.selectedBear;
         showcaseBear.position.set(0, 4.65, 0.8);
         showcaseBear.rotation.set(0, 0, 0);
         scene.add(showcaseBear);
+        console.log("[SHOWCASE] Recreated bear due to missing arm");
     }
 
-    // Always recreate fish if needed (it's lightweight)
-    const needsNewFish = !showcaseFish || 
-        showcaseFish.userData.fishType !== playerProgress.selectedFish;
+    // Create fresh fish
+    console.log("[SHOWCASE] Creating new showcase fish of type:", playerProgress.selectedFish);
+    showcaseFish = createFish(scene, 0, playerProgress.selectedFish, {}, false);
+    showcaseFish.name = 'showcase-fish';
+    showcaseFish.userData.fishType = playerProgress.selectedFish;
+    if (showcaseFish.userData?.velocity) showcaseFish.userData.velocity.set(0, 0, 0);
+    if (showcaseFish.userData) showcaseFish.userData.swimAmplitude = 0;
     
-    if (needsNewFish) {
-        // Remove old fish if it exists
-        if (showcaseFish) {
-            const rightArm = showcaseBear.getObjectByName('rightArm');
-            if (rightArm && showcaseFish.parent === rightArm) {
-                rightArm.remove(showcaseFish);
-            }
-            disposeObject(showcaseFish);
-            showcaseFish = null;
-        }
-
-        // Create new fish
-        showcaseFish = createFish(scene, 0, playerProgress.selectedFish, {}, false);
-        showcaseFish.name = 'showcase-fish';
-        showcaseFish.userData.fishType = playerProgress.selectedFish; // Track fish type
-        if (showcaseFish.userData?.velocity) showcaseFish.userData.velocity.set(0, 0, 0);
-        if (showcaseFish.userData) showcaseFish.userData.swimAmplitude = 0;
-        
-        // Attach fish to bear's hand
-        const rightArm = showcaseBear.getObjectByName('rightArm');
-        if (rightArm) {
-            rightArm.add(showcaseFish);
-            showcaseFish.position.set(0.1, -0.7, 0.4);
-            showcaseFish.rotation.set(-Math.PI / 4, Math.PI / 2, Math.PI);
-            showcaseFish.scale.set(0.5, 0.5, 0.5);
-        } else {
-             console.error("Showcase bear's right arm not found for fish attachment!");
-        }
+    // Attach fish to bear's hand with error checking
+    const finalRightArm = showcaseBear.getObjectByName('rightArm');
+    if (finalRightArm) {
+        console.log("[SHOWCASE] Attaching fish to right arm");
+        finalRightArm.add(showcaseFish);
+        showcaseFish.position.set(0.1, -0.7, 0.4);
+        showcaseFish.rotation.set(-Math.PI / 4, Math.PI / 2, Math.PI);
+        showcaseFish.scale.set(0.5, 0.5, 0.5);
+        console.log("[SHOWCASE] Fish successfully attached");
+    } else {
+        console.error("[SHOWCASE] CRITICAL: Cannot attach fish - right arm still missing!");
+        console.log("[SHOWCASE] Final bear structure:", {
+            childrenCount: showcaseBear.children.length,
+            childrenNames: showcaseBear.children.map(c => c.name || 'unnamed')
+        });
     }
 
     // Ensure showcase bear is visible
     if (showcaseBear) {
         showcaseBear.visible = true;
+        console.log("[SHOWCASE] Showcase bear set to visible");
     }
+    
+    console.log("[SHOWCASE] Showcase creation completed");
 }
 
 function setupStartScreen() {
+    console.log("[SETUP] Setting up start screen");
     gameState.current = 'IDLE';
     
     // Hide any active game objects (but not showcase objects)
@@ -136,7 +155,7 @@ function setupStartScreen() {
 
     // Make sure game bear is fully gone
     if (bear) {
-        disposeObject(bear);
+        console.log("[SETUP] Removing game bear");
         scene.remove(bear);
         bear = null;
     }
@@ -159,13 +178,16 @@ function setupStartScreen() {
         if(quickFishName) quickFishName.textContent = selectedFishInfo.name;
         if(quickFishImg) quickFishImg.src = selectedFishInfo.asset;
         
+        console.log("[SETUP] Recreating showcase after unlock selection");
         createOrUpdateShowcase();
     });
     
+    console.log("[SETUP] Creating main showcase");
     createOrUpdateShowcase(); // Ensure showcase is visible and up to date
     showStart(isFirstLoad);
     isFirstLoad = false;
     startButton.innerText = 'START';
+    console.log("[SETUP] Start screen setup completed");
 }
 
 function startGame() {
