@@ -102,7 +102,8 @@ function createOrUpdateShowcase() {
     if (rightAnchor) {
         rightAnchor.add(showcaseFish);
         showcaseFish.position.set(0.12, -0.35, 0.35);
-        showcaseFish.rotation.set(-Math.PI/6, Math.PI/2, Math.PI);
+        // set local rotation to zero so it follows the hand/arm orientation naturally
+        showcaseFish.rotation.set(0, 0, 0);
         showcaseFish.scale.set(0.5, 0.5, 0.5);
         showcaseFish.visible = true;
         // ensure no culling on attached fish
@@ -131,7 +132,8 @@ function setupShowcaseAnimation() {
     if (arm?.rotation) new TWEEN.Tween(arm.rotation).to({ x: -0.35 }, 900).easing(easingInOut).yoyo(true).repeat(Infinity).start();
     if (showcaseFish) {
         new TWEEN.Tween(showcaseFish.position).to({ y: 0.15, z: 0.5 }, 800).easing(easingInOut).yoyo(true).repeat(Infinity).start();
-        new TWEEN.Tween(showcaseFish.rotation).to({ x: -Math.PI/8, z: Math.PI/16 }, 800).easing(easingInOut).yoyo(true).repeat(Infinity).start();
+        // remove rotation tween to prevent conflicting orientation with arm
+        // new TWEEN.Tween(showcaseFish.rotation)...
     }
 }
 
