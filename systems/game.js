@@ -129,8 +129,9 @@ function setupShowcaseAnimation() {
     TWEEN.removeAll();
     const arm = showcaseBear.getObjectByName('rightArm');
     if (arm?.rotation) {
-        arm.rotation.y = 0.2; // bias arm toward +Z
-        new TWEEN.Tween(arm.rotation).to({ x: 0.25 }, 900).easing(easingInOut).yoyo(true).repeat(Infinity).start();
+        arm.rotation.y = 0.28; // bias arm toward +Z a bit more
+        arm.rotation.x = 0.20; // set safe forward baseline
+        new TWEEN.Tween(arm.rotation).to({ x: 0.30 }, 900).easing(easingInOut).yoyo(true).repeat(Infinity).start();
     }
     if (showcaseFish) {
         new TWEEN.Tween(showcaseFish.position).to({ y: 0.15, z: 0.5 }, 800).easing(easingInOut).yoyo(true).repeat(Infinity).start();
@@ -301,8 +302,8 @@ export function updateGame() {
         if (showcaseBear) {
             const rightArm = showcaseBear.getObjectByName('rightArm');
             if (rightArm) {
-                rightArm.rotation.x = Math.sin(gameState.idleAnimTimer) * 0.08 + 0.12; // less backward bend
-                rightArm.rotation.y = 0.2; // bias toward +Z
+                rightArm.rotation.x = Math.sin(gameState.idleAnimTimer) * 0.06 + 0.22; // always forward
+                rightArm.rotation.y = 0.28; // stronger +Z bias
             }
         }
     }
