@@ -104,6 +104,8 @@ function createOrUpdateShowcase() {
         showcaseFish.rotation.set(-Math.PI/6, Math.PI/2, Math.PI);
         showcaseFish.scale.set(0.5, 0.5, 0.5);
         showcaseFish.visible = true;
+        // ensure no culling on attached fish
+        showcaseFish.traverse((o) => { if (o.isMesh || o.isGroup) o.frustumCulled = false; });
         console.log("[SHOWCASE] Fish attached to hand anchor");
     }
 

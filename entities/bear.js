@@ -33,7 +33,7 @@ export function createBear(type = 'splashy') {
     group.add(createVoxel(-0.5, -1, 0, 0.5, 0.5, 0.5, bodyMat));
     group.add(createVoxel(0.5, -1, 0, 0.5, 0.5, 0.5, bodyMat));
 
-    const armY = 0.1, armZ = -0.3;
+    const armY = 0.1, armZ = 0.1; // moved arms slightly forward to avoid occlusion
     const armWidth = 0.4, armHeight = 1.0, armDepth = 0.4;
     
     // Left Arm
@@ -42,7 +42,7 @@ export function createBear(type = 'splashy') {
     leftArm.add(leftArmMesh);
     const leftHandAnchor = new THREE.Object3D(); leftHandAnchor.name = 'leftHandAnchor';
     leftHandAnchor.position.set(0, -armHeight/2, 0); leftArm.add(leftHandAnchor);
-    leftArm.position.set(-0.95, armY, armZ); leftArm.rotation.z = -Math.PI/16; group.add(leftArm);
+    leftArm.position.set(-0.95, armY, armZ); leftArm.rotation.z = -Math.PI/20; group.add(leftArm);
 
     // Right Arm
     const rightArm = new THREE.Group(); rightArm.name = 'rightArm';
@@ -50,7 +50,7 @@ export function createBear(type = 'splashy') {
     rightArm.add(rightArmMesh);
     const rightHandAnchor = new THREE.Object3D(); rightHandAnchor.name = 'rightHandAnchor';
     rightHandAnchor.position.set(0, -armHeight/2, 0); rightArm.add(rightHandAnchor);
-    rightArm.position.set(0.95, armY, armZ); rightArm.rotation.z = Math.PI/16; group.add(rightArm);
+    rightArm.position.set(0.95, armY, armZ); rightArm.rotation.z = Math.PI/20; group.add(rightArm);
     
     group.position.set(0, 4.65, 0.8); // Adjusted Y to be on top of the log.
     group.rotation.y = Math.PI;
