@@ -181,6 +181,8 @@ function setupStartScreen() {
     
     console.log("[SETUP] Creating main showcase");
     createOrUpdateShowcase(); // Ensure showcase is visible and up to date
+    // Face the other direction on retry screens only
+    if (!isFirstLoad && showcaseBear) { showcaseBear.rotation.y = 0; showcaseBear.updateMatrixWorld(true); }
     showStart(isFirstLoad);
     isFirstLoad = false;
     startButton.innerText = 'START';
