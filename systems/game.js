@@ -101,7 +101,7 @@ function createOrUpdateShowcase() {
     // Attach fish to bear's hand with error checking
     if (rightAnchor) {
         rightAnchor.add(showcaseFish);
-        showcaseFish.position.set(0, -0.35, 0.35);
+        showcaseFish.position.set(0.12, -0.35, 0.35);
         showcaseFish.rotation.set(-Math.PI/6, Math.PI/2, Math.PI);
         showcaseFish.scale.set(0.5, 0.5, 0.5);
         showcaseFish.visible = true;
