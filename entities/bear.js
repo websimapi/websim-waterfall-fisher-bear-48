@@ -50,7 +50,7 @@ export function createBear(type = 'splashy') {
     rightArm.add(rightArmMesh);
     const rightHandAnchor = new THREE.Object3D(); rightHandAnchor.name = 'rightHandAnchor';
     rightHandAnchor.position.set(0, -armHeight/2, 0); rightArm.add(rightHandAnchor);
-    rightArm.position.set(0.95, armY, armZ); rightArm.rotation.z = Math.PI/20; rightArm.rotation.x = 0.22; group.add(rightArm);
+    rightArm.position.set(0.95, armY, armZ); rightArm.rotation.z = Math.PI/20; group.add(rightArm);
     
     group.position.set(0, 4.65, 0.8); // Adjusted Y to be on top of the log.
     group.rotation.y = Math.PI;
