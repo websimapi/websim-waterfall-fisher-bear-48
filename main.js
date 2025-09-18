@@ -5,6 +5,7 @@ import { createWaterfall, updateWaterfall } from './entities/waterfall.js';
 import { initControls } from './systems/controls.js';
 import { initGame, updateGame } from './systems/game.js';
 import { initDevTools } from './systems/dev.js';
+import * as TWEEN from 'tween';
 
 // --- SCENE SETUP ---
 const scenery = createScenery();
@@ -34,6 +35,7 @@ function animate() {
 
     updateWaterfall(waterfall);
     updateGame();
+    TWEEN.update(); // drive tween-based animations
 
     renderer.render(scene, camera);
 }

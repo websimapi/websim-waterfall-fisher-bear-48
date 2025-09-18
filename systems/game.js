@@ -6,6 +6,7 @@ import { initAudio, playSFX, sounds, wireAudioUnlock } from './audio.js';
 import { bindUI, updateUIValues, showGameOver, showHUD, showStart, populateUnlocks } from './ui.js';
 import { BEARS, FISH, getPlayerProgress, savePlayerProgress } from '../unlocks.js';
 import { updateSpawner, resetSpawner } from './fishSpawner.js';
+import * as TWEEN from 'tween';
 
 // --- GAME OBJECTS ---
 export let bear = null;
@@ -116,7 +117,20 @@ function createOrUpdateShowcase() {
         console.log("[SHOWCASE] Showcase bear set to visible");
     }
     
+    setupShowcaseAnimation(); // start new tween-based idle animation
+    
     console.log("[SHOWCASE] Showcase creation completed");
+}
+
+function setupShowcaseAnimation() {
+    if (!showcaseBear) return;
+    TWEEN.removeAll();
+    const arm = showcaseBear.getObjectByName('rightArm');
+    if (arm) new TWEEN.Tween(arm.rotation).to({ x: 0.35 }, 900).easing(TWEEN.Easing.Sine.InOut).yoyo(true).repeat(Infinity).start();
+    if (showcaseFish) {
+        new TWEEN.Tween(showcaseFish.position).to({ y: 0.15, z: 0.5 }, 800).easing(TWEEN.Easing.Sine.InOut).yoyo(true).repeat(Infinity).start();
+        new TWEEN.Tween(showcaseFish.rotation).to({ x: -Math.PI/8, z: Math.PI/16 }, 800).easing(TWEEN.Easing.Sine.InOut).yoyo(true).repeat(Infinity).start();
+    }
 }
 
 function setupStartScreen() {
@@ -173,6 +187,7 @@ function setupStartScreen() {
 
 function startGame() {
     gameState = { current: 'PLAYING', score: 0, streak: 1 };
+    TWEEN.removeAll(); // stop showcase tweens when gameplay begins
     
     // Hide the showcase bear instead of removing it
     if (showcaseBear) {
