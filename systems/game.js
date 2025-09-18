@@ -21,40 +21,39 @@ const gravity = new THREE.Vector3(0, -0.05, 0);
 let isFirstLoad = true;
 
 function createOrUpdateShowcase() {
-    // If showcase bear doesn't exist, create it and the fish once.
-    if (!showcaseBear) {
-        // Create bear
-        showcaseBear = createBear(playerProgress.selectedBear);
-        showcaseBear.name = 'showcase-bear';
-        showcaseBear.userData.isShowcase = true;
-        showcaseBear.position.set(0, 4.65, 0.8);
-        showcaseBear.rotation.set(0, 0, 0); // Face camera
-        scene.add(showcaseBear);
-
-        // Create fish
-        showcaseFish = createFish(scene, 0, playerProgress.selectedFish);
-        showcaseFish.name = 'showcase-fish';
-        if (showcaseFish.userData?.velocity) showcaseFish.userData.velocity.set(0, 0, 0);
-        if (showcaseFish.userData) showcaseFish.userData.swimAmplitude = 0;
-        
-        // Attach fish to bear's hand permanently
-        const rightArm = showcaseBear.getObjectByName('rightArm');
-        if (rightArm) {
-            scene.remove(showcaseFish); // remove from main scene to add to arm
-            rightArm.add(showcaseFish);
-            showcaseFish.position.set(0.1, -0.7, 0.4);
-            showcaseFish.rotation.set(-Math.PI / 4, Math.PI / 2, Math.PI);
-            showcaseFish.scale.set(0.5, 0.5, 0.5);
-        } else {
-             console.error("Showcase bear's right arm not found for fish attachment!");
-        }
+    // If a showcase bear already exists, remove it completely to ensure a fresh state on retry.
+    if (showcaseBear) {
+        scene.remove(showcaseBear);
+        // Let garbage collection handle disposal of geometries/materials.
+        showcaseBear = null;
+        showcaseFish = null; // This reference is also stale now.
     }
 
-    // On subsequent calls, just make them visible and maybe update skins if needed
-    showcaseBear.visible = true;
+    // Always create the bear and fish from scratch to prevent state corruption bugs.
+    showcaseBear = createBear(playerProgress.selectedBear);
+    showcaseBear.name = 'showcase-bear';
+    showcaseBear.userData.isShowcase = true;
+    showcaseBear.position.set(0, 4.65, 0.8);
+    showcaseBear.rotation.set(0, 0, 0); // Face camera
+    scene.add(showcaseBear);
+
+    // Create fish
+    showcaseFish = createFish(scene, 0, playerProgress.selectedFish);
+    showcaseFish.name = 'showcase-fish';
+    if (showcaseFish.userData?.velocity) showcaseFish.userData.velocity.set(0, 0, 0);
+    if (showcaseFish.userData) showcaseFish.userData.swimAmplitude = 0;
     
-    // In a future update, we could swap the models here instead of recreating
-    // For now, this ensures they are visible.
+    // Attach fish to bear's hand
+    const rightArm = showcaseBear.getObjectByName('rightArm');
+    if (rightArm) {
+        scene.remove(showcaseFish); // remove from main scene to add to arm
+        rightArm.add(showcaseFish);
+        showcaseFish.position.set(0.1, -0.7, 0.4);
+        showcaseFish.rotation.set(-Math.PI / 4, Math.PI / 2, Math.PI);
+        showcaseFish.scale.set(0.5, 0.5, 0.5);
+    } else {
+         console.error("Showcase bear's right arm not found for fish attachment!");
+    }
 }
 
 function setupStartScreen() {
