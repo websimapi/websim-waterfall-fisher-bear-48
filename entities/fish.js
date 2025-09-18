@@ -19,7 +19,7 @@ function createVoxel(x, y, z, w, h, d, mat) {
     return mesh;
 }
 
-export function createFish(scene, score = 0, type = 'classic', opts = {}) {
+export function createFish(scene, score = 0, type = 'classic', opts = {}, addToScene = true) {
     const group = new THREE.Group();
     group.name = 'fish';
 
@@ -93,7 +93,9 @@ export function createFish(scene, score = 0, type = 'classic', opts = {}) {
         pattern: opts.pattern || ['sine','zigzag','drift'][Math.floor(Math.random()*3)],
         drift: 0
     };
-    scene.add(group);
+    if (addToScene) {
+        scene.add(group);
+    }
     return group;
 }
 

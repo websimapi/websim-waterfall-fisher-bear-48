@@ -20,16 +20,49 @@ export let gameState = { current: 'IDLE', score: 0, streak: 1, idleAnimTimer: 0 
 const gravity = new THREE.Vector3(0, -0.05, 0);
 let isFirstLoad = true;
 
-function createOrUpdateShowcase() {
-    // If a showcase bear already exists, remove it completely to ensure a fresh state on retry.
-    if (showcaseBear) {
-        scene.remove(showcaseBear);
-        // Let garbage collection handle disposal of geometries/materials.
-        showcaseBear = null;
-        showcaseFish = null; // This reference is also stale now.
+/**
+ * [FIX] Technical Note: The 'missing arm' bug on retry was due to improper
+ * disposal of THREE.js objects. Simply removing an object from the scene
+ * doesn't free up its geometry and material data from GPU memory. This
+ * function ensures a deep disposal of an object and all its children.
+ * It's called on the old `showcaseBear` before creating a new one to prevent
+ * state corruption and rendering glitches.
+ */
+function disposeObject(obj) {
+    if (!obj) return;
+
+    // Dispose of children first
+    while (obj.children.length > 0) {
+        disposeObject(obj.children[0]);
+        obj.remove(obj.children[0]);
     }
 
-    // Always create the bear and fish from scratch to prevent state corruption bugs.
+    // Dispose of the object itself
+    if (obj.isMesh) {
+        if (obj.geometry) {
+            obj.geometry.dispose();
+        }
+        if (obj.material) {
+            // Materials can be an array
+            if (Array.isArray(obj.material)) {
+                obj.material.forEach(material => material.dispose());
+            } else {
+                obj.material.dispose();
+            }
+        }
+    }
+}
+
+function createOrUpdateShowcase() {
+    // [FIX] Perform a full, robust disposal of the old showcase objects.
+    if (showcaseBear) {
+        disposeObject(showcaseBear); // This handles children like the fish too.
+        scene.remove(showcaseBear);
+        showcaseBear = null;
+        showcaseFish = null;
+    }
+
+    // Create the bear and fish from a clean slate.
     showcaseBear = createBear(playerProgress.selectedBear);
     showcaseBear.name = 'showcase-bear';
     showcaseBear.userData.isShowcase = true;
@@ -37,8 +70,9 @@ function createOrUpdateShowcase() {
     showcaseBear.rotation.set(0, 0, 0); // Face camera
     scene.add(showcaseBear);
 
-    // Create fish
-    showcaseFish = createFish(scene, 0, playerProgress.selectedFish);
+    // [FIX] Create the fish but don't add it to the main scene.
+    // It will be added directly as a child of the bear's arm.
+    showcaseFish = createFish(scene, 0, playerProgress.selectedFish, {}, false);
     showcaseFish.name = 'showcase-fish';
     if (showcaseFish.userData?.velocity) showcaseFish.userData.velocity.set(0, 0, 0);
     if (showcaseFish.userData) showcaseFish.userData.swimAmplitude = 0;
@@ -46,8 +80,7 @@ function createOrUpdateShowcase() {
     // Attach fish to bear's hand
     const rightArm = showcaseBear.getObjectByName('rightArm');
     if (rightArm) {
-        scene.remove(showcaseFish); // remove from main scene to add to arm
-        rightArm.add(showcaseFish);
+        rightArm.add(showcaseFish); // Add fish directly to the arm
         showcaseFish.position.set(0.1, -0.7, 0.4);
         showcaseFish.rotation.set(-Math.PI / 4, Math.PI / 2, Math.PI);
         showcaseFish.scale.set(0.5, 0.5, 0.5);
@@ -69,6 +102,13 @@ function setupStartScreen() {
     activeFishes.forEach(f => scene.remove(f));
     activeFishes = [];
 
+    // Make sure game bear is fully gone
+    if (bear) {
+        disposeObject(bear);
+        scene.remove(bear);
+        bear = null;
+    }
+
     populateUnlocks(playerProgress, (type, id) => {
         if (type === 'bear') playerProgress.selectedBear = id;
         if (type === 'fish') playerProgress.selectedFish = id;
@@ -87,8 +127,8 @@ function setupStartScreen() {
         if(quickFishName) quickFishName.textContent = selectedFishInfo.name;
         if(quickFishImg) quickFishImg.src = selectedFishInfo.asset;
         
-        // This part would need a bigger refactor to hot-swap models.
-        // For now, we accept that the model updates on full page reload or next game start.
+        // The showcase will now be correctly rebuilt with the new selection
+        createOrUpdateShowcase();
     });
     createOrUpdateShowcase();
     showStart(isFirstLoad);
