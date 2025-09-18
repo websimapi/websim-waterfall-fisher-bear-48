@@ -42,14 +42,17 @@ function disposeObject(obj) {
         if (obj.geometry) {
             obj.geometry.dispose();
         }
-        if (obj.material) {
-            // Materials can be an array
+        // [FIX] DO NOT dispose materials. They are shared constants across
+        // different bear/fish instances. Disposing them globally breaks
+        // any future objects that try to use them. Geometries are created
+        // uniquely per part, so they are safe to dispose.
+        /* if (obj.material) {
             if (Array.isArray(obj.material)) {
                 obj.material.forEach(material => material.dispose());
             } else {
                 obj.material.dispose();
             }
-        }
+        } */
     }
 }
 
