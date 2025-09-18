@@ -103,12 +103,14 @@ function createOrUpdateShowcase() {
         showcaseFish.position.set(0, -0.35, 0.35);
         showcaseFish.rotation.set(-Math.PI/6, Math.PI/2, Math.PI);
         showcaseFish.scale.set(0.5, 0.5, 0.5);
+        showcaseFish.visible = true;
         console.log("[SHOWCASE] Fish attached to hand anchor");
     }
 
     // Ensure showcase bear is visible
     if (showcaseBear) {
         showcaseBear.visible = true;
+        showcaseBear.updateMatrixWorld(true);
         console.log("[SHOWCASE] Showcase bear set to visible");
     }
     

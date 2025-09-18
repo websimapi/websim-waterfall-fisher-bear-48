@@ -66,6 +66,8 @@ export function createBear(type = 'splashy') {
     net.position.set(0, -1.3, -0.7);
     group.add(net);
     group.userData.net = net; group.userData.netWidth = netWidth;
+    // Ensure no parts get culled due to bounding box inaccuracies after parenting/animation
+    group.traverse((o) => { if (o.isMesh || o.isGroup) o.frustumCulled = false; });
     return group;
 }
 
