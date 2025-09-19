@@ -102,8 +102,7 @@ function createOrUpdateShowcase() {
     if (rightAnchor) {
         rightAnchor.add(showcaseFish);
         showcaseFish.position.set(0.12, -0.35, 0.35);
-        // set local rotation to zero so it follows the hand/arm orientation naturally
-        showcaseFish.rotation.set(0, 0, 0);
+        showcaseFish.rotation.set(-Math.PI/6, Math.PI/2, Math.PI);
         showcaseFish.scale.set(0.5, 0.5, 0.5);
         showcaseFish.visible = true;
         // ensure no culling on attached fish
@@ -131,9 +130,25 @@ function setupShowcaseAnimation() {
     const arm = showcaseBear.getObjectByName('rightArm');
     if (arm?.rotation) new TWEEN.Tween(arm.rotation).to({ x: -0.35 }, 900).easing(easingInOut).yoyo(true).repeat(Infinity).start();
     if (showcaseFish) {
-        new TWEEN.Tween(showcaseFish.position).to({ y: 0.15, z: 0.5 }, 800).easing(easingInOut).yoyo(true).repeat(Infinity).start();
-        // remove rotation tween to prevent conflicting orientation with arm
-        // new TWEEN.Tween(showcaseFish.rotation)...
+        // lock fish at hand; animate only tail + body segments for a held wiggle
+        const wiggle = { t: 0 };
+        new TWEEN.Tween(wiggle)
+          .to({ t: Math.PI * 2 }, 1200)
+          .easing(easingInOut)
+          .onUpdate(() => {
+              const ud = showcaseFish.userData || {};
+              const phase = wiggle.t;
+              if (ud.tailV) ud.tailV.rotation.y = Math.sin(phase) * 0.45;
+              if (ud.tailH) ud.tailH.rotation.y = Math.sin(phase) * 0.45;
+              if (ud.segments) {
+                  for (const s of ud.segments) {
+                      s.mesh.position.x = s.baseX + Math.sin(phase + s.phase * Math.PI) * (ud.wiggleAmp ? ud.wiggleAmp * 0.6 : 0.12);
+                  }
+              }
+          })
+          .repeat(Infinity)
+          .yoyo(true)
+          .start();
     }
 }
 
