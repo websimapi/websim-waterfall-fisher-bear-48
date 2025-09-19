@@ -41,16 +41,16 @@ export function createFish(scene, score = 0, type = 'classic', opts = {}, addToS
         }
 
         const bodySeg = createVoxel(0, 0, z, w, h, length / segments, segMat);
-        group.add(bodySeg); segmentsArr.push({ mesh: bodySeg, baseX: 0, phase: t });
+        group.add(bodySeg); segmentsArr.push({ mesh: bodySeg, baseRotY: bodySeg.rotation.y, phase: t });
         const bellyH = h * 0.25;
         group.add(createVoxel(0, -h * 0.3, z, w * 0.95, bellyH, (length / segments) * 0.98, bellyMat));
     }
 
     // tail (vertical caudal fin + small stabilizer)
-    const tailZ = -0.4 + length + 0.15;
-    const tailBase = createVoxel(0, 0.0, tailZ - 0.1, 0.25, 0.6, 0.18, fishTailMat);
-    const tailV = createVoxel(0, 0.0, tailZ, 0.06, 0.9, 0.5, fishTailMat);
-    const tailH = createVoxel(0, -0.05, tailZ - 0.05, 0.5, 0.08, 0.35, fishTailMat);
+    const tailZ = -0.4 + length + 0.20; // push slightly back from body
+    const tailBase = createVoxel(0, 0.0, tailZ - 0.1, 0.22, 0.55, 0.16, fishTailMat);
+    const tailV = createVoxel(0, 0.0, tailZ, 0.04, 0.50, 0.28, fishTailMat); // slimmer, shorter
+    const tailH = createVoxel(0, -0.05, tailZ - 0.06, 0.28, 0.05, 0.18, fishTailMat); // slimmer, shorter
     group.add(tailBase, tailV, tailH);
 
     // fins
@@ -90,6 +90,8 @@ export function createFish(scene, score = 0, type = 'classic', opts = {}, addToS
         prevX: xPos,
         tailV, tailH, dorsal, anal, pectoralL, pectoralR,
         segments: segmentsArr, wiggleAmp: 0.22, wiggleFreq: 2.6,
+        wiggleRotAmp: 0.10,
+        tailMaxRot: 0.10, // tighter cap to avoid clipping
         pattern: opts.pattern || ['sine','zigzag','drift'][Math.floor(Math.random()*3)],
         drift: 0
     };
@@ -130,17 +132,21 @@ export function updateFish(fish) {
     fish.rotation.y = ud.baseRotY + Math.sin(ud.swimTimer * ud.swimFrequency) * 0.12;
     fish.rotation.z = THREE.MathUtils.clamp(-dx * 0.6, -0.3, 0.3);
     // tail wag and fin flaps
-    const tailSwing = Math.sin(ud.swimTimer * 2.2) * 0.5;
+    const turn = Math.abs(dx);
+    const damp = THREE.MathUtils.clamp(1 - turn * 8, 0.35, 1);
+    const tailSwing = Math.sin(ud.swimTimer * 2.2) * (ud.tailMaxRot || 0.14) * damp;
     if (ud.tailV) ud.tailV.rotation.y = tailSwing;
     if (ud.tailH) ud.tailH.rotation.y = tailSwing;
     const finFlap = Math.sin(ud.swimTimer * 3.0) * 0.25;
     if (ud.pectoralL) ud.pectoralL.rotation.z = 0.2 + finFlap;
     if (ud.pectoralR) ud.pectoralR.rotation.z = -0.2 - finFlap;
 
-    // spine wiggle across segments
+    // spine wiggle across segments - rotate around Y to avoid geometry overlap
     const spinePhase = ud.swimTimer * ud.wiggleFreq;
     if (ud.segments) for (const s of ud.segments) {
-        s.mesh.position.x = s.baseX + Math.sin(spinePhase + s.phase * Math.PI) * ud.wiggleAmp;
+        const tailFactor = THREE.MathUtils.smoothstep(s.phase, 0.68, 0.98); // bias later toward tail
+        const localAmp = (ud.wiggleRotAmp || 0.25) * 0.8 * tailFactor;
+        s.mesh.rotation.y = (s.baseRotY || 0) + Math.sin(spinePhase + s.phase * Math.PI) * localAmp;
     }
 }
 
